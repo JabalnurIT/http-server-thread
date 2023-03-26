@@ -1,5 +1,6 @@
 import socket
 import ssl
+from bs4 import BeautifulSoup
 
 HOST1 = 'www.its.ac.id'
 HOST2 = 'classroom.its.ac.id'
@@ -50,13 +51,21 @@ while True:
 ssl_socket.close()
 header2, body2 = response2.split('\r\n\r\n', 1)
 
+soup = BeautifulSoup(body2, 'html.parser')
+navbar = soup.nav.ul.get_text(separator='\n', strip=True).split("\n")
+navbar[1] = "\t"+navbar[1]
+navbar[2] = "\t"+navbar[2]
+navbar[4] = "\t"+navbar[4]
+navbar = "\n".join(navbar)
 
+# Soal
 questions = ["Cetaklah status code dan deskripsinya dari HTTP response header pada halaman its.ac.id",
         "Cetaklah versi Content-Encoding dari HTTP response header di halaman web its.ac.id",
         "Cetaklah versi HTTP dari HTTP response header pada halaman web its.ac.id",
         "Cetaklah property charset pada Content-Type dari HTTP response header pada halaman classroom.its.ac.id",
         "Dapatkanlah daftar menu pada halaman utama classroom.its.ac.id dengan melakukan parsing HTML"]
 
+# Jawaban
 answers = []
 
 answers.append(" ".join(header1.split("\n")[0].split(" ")[1:]))
@@ -77,24 +86,13 @@ if 'content-type' in header2.lower():
 else:
     answers.append("Content-Type is not found")
 
-answers.append("Belum Ada")
-# answers = [" ".join(header1.split("\n")[0].split(" ")[1:]),
-#         "Belum Ada",
-#         header1.split("\n")[0].split(" ")[0],
-#         " ".join(header2.split("\n")[3].split(" ")[1:]),
-#         "Belum Ada"]
-# Jawaban
+answers.append(navbar)
+
+# Print
 for index, (q, a) in enumerate(zip(questions, answers)):
     print("Nomor %d: %s" % (index+1, q))
-    print("Jawaban: %s" %(a))
+    print("Jawaban:\n%s\n" %(a))
 
-print("=====HEADER 1=====")
-print(header1)
-print("=====HEADER 2=====")
-print(header2)
-
-# nomor1 = response.split("\n")[0].split(" ")
-# print("Answer:",nomor1[1],nomor1[2],"\n")
 
 
 

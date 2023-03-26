@@ -6,57 +6,57 @@ HOST1 = 'www.its.ac.id'
 HOST2 = 'classroom.its.ac.id'
 PORT = 443
 
+def getItems(container):
+    soup = BeautifulSoup(container, 'html.parser')
+    nav = soup.nav.ul
+    items = []
+
+    try:
+        lis = nav.find_all('li')
+        for li in lis:
+            a = li.find('a')
+            if a:
+                items.append(a.text.strip())
+            div = li.find('div')
+            lis_a = div.find_all('a')
+            for li_a in lis_a:
+                items.append('\t' + li_a.text.strip())
+    except AttributeError:
+        pass
+    return "\n".join(items)
+
+def http_get(HOST, PORT):
+    server_address = (HOST, PORT)
+    request_header = b"GET / HTTP/1.1\r\nHost: " + HOST.encode() + b"\r\n\r\n"
+
+    client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+    ssl_context = ssl.create_default_context()
+    ssl_socket = ssl_context.wrap_socket(client_socket, server_hostname=HOST)
+    ssl_socket.connect((server_address))
+
+    ssl_socket.send(request_header)
+
+    response = ''
+    while True:
+        received = ssl_socket.recv(1024)
+        if not received:
+            break
+        response += received.decode('utf-8')
+
+    ssl_socket.close()
+    header, body = response.split('\r\n\r\n', 1)
+
+    return header, body
+
 
 # Nomor 1-3
-server_address = (HOST1, PORT)
-request_header = b"GET / HTTP/1.1\r\nHost: " + HOST1.encode() + b"\r\n\r\n"
-
-client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
-ssl_context = ssl.create_default_context()
-ssl_socket = ssl_context.wrap_socket(client_socket, server_hostname=HOST1)
-ssl_socket.connect((server_address))
-
-ssl_socket.send(request_header)
-
-response1 = ''
-while True:
-    received = ssl_socket.recv(1024)
-    if not received:
-        break
-    response1 += received.decode('utf-8')
-
-ssl_socket.close()
-header1, body1 = response1.split('\r\n\r\n', 1)
+header1, body1 = http_get(HOST1, PORT)
 
 # Nomor 4-5
-server_address = (HOST2, PORT)
-request_header = b"GET / HTTP/1.1\r\nHost: " + HOST2.encode() + b"\r\n\r\n"
+header2, body2 = http_get(HOST2, PORT)
 
-client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-ssl_context = ssl.create_default_context()
-ssl_socket = ssl_context.wrap_socket(client_socket, server_hostname=HOST2)
-ssl_socket.connect((server_address))
-
-ssl_socket.send(request_header)
-
-response2 = ''
-while True:
-    received = ssl_socket.recv(1024)
-    if not received:
-        break
-    response2 += received.decode('utf-8')
-
-ssl_socket.close()
-header2, body2 = response2.split('\r\n\r\n', 1)
-
-soup = BeautifulSoup(body2, 'html.parser')
-navbar = soup.nav.ul.get_text(separator='\n', strip=True).split("\n")
-navbar[1] = "\t"+navbar[1]
-navbar[2] = "\t"+navbar[2]
-navbar[4] = "\t"+navbar[4]
-navbar = "\n".join(navbar)
 
 # Soal
 questions = ["Cetaklah status code dan deskripsinya dari HTTP response header pada halaman its.ac.id",
@@ -86,7 +86,7 @@ if 'content-type' in header2.lower():
 else:
     answers.append("Content-Type is not found")
 
-answers.append(navbar)
+answers.append(getItems(body2))
 
 # Print
 for index, (q, a) in enumerate(zip(questions, answers)):
